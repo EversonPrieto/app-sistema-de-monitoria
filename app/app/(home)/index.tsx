@@ -1,27 +1,24 @@
 import { Link } from 'expo-router';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import Navbar from '../(componentes)/navbar';
 
 export default function HomeScreen() {
   return (
-    
+
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <FontAwesome name="bars" size={38} color="#F49F0A" />
-        <Text style={styles.headerText}>Askademia</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <Navbar />
       <View style={styles.mainContent}>
-      <Text style={styles.title}> Home</Text>
-      <Link href="/login" style={styles.button}><Text style={styles.buttonText}>Login</Text>
-      </Link>
-      <Link href="/cadastro" style={styles.button}>
-        <Text style={styles.buttonText} >Cadastre-se </Text>
-      </Link>
-      {/* Teste de Alert*/}
-      <TouchableOpacity onPress={() => alert("ISSO DEFINITIVAMEN É UM AVISO!")} style={styles.button}>
-        <Text style={styles.buttonText}>Testando Alert</Text>
-      </TouchableOpacity>
+        <Text style={styles.title}> Home</Text>
+        <Link href="/login" style={styles.button}><Text style={styles.buttonText}>Login</Text>
+        </Link>
+        <Link href="/cadastro" style={styles.button}>
+          <Text style={styles.buttonText} >Cadastre-se </Text>
+        </Link>
+        {/* Teste de Alert*/}
+        <TouchableOpacity onPress={() => alert("ISSO DEFINITIVAMEN É UM AVISO!")} style={styles.button}>
+          <Text style={styles.buttonText}>Testando Alert</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -37,7 +34,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomWidth: 1, 
+    borderBottomWidth: 1,
     borderBottomColor: '#F49F0A'
   },
   headerText: {
@@ -68,7 +65,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     textAlign: 'center',
-    
+
   },
   buttonText: {
     color: '#00000',

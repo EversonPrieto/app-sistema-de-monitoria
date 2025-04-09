@@ -2,15 +2,12 @@ import React from 'react';
 import { Link } from 'expo-router';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import Navbar from './(componentes)/navbar';
 
 export default function App() {
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <FontAwesome name="bars" size={38} color="#F49F0A" />
-        <Text style={styles.headerText}>Askademia</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <Navbar />
       <View style={styles.mainContent}>
         <Text style={styles.title}>Cadastre-se</Text>
         <View style={styles.inputContainer}>
@@ -53,7 +50,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomWidth: 1, 
+    borderBottomWidth: 1,
     borderBottomColor: '#F49F0A'
   },
   headerText: {
