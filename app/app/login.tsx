@@ -3,6 +3,7 @@ import { Link, useRouter } from 'expo-router';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Alert, useWindowDimensions } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import Navbar from './(componentes)/navbar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LARGE_SCREEN_BREAKPOINT = 768;
 
@@ -20,19 +21,18 @@ export default function App() {
     const validEmail = 'joao@senacrs.com.br';
     const validsenha = '12345678';
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
         setWrongInput(false);
-
+    
         if (email === validEmail && senha === validsenha) {
+            await AsyncStorage.setItem('usuarioLogado', 'true'); // Salva o status
             alert("Sucesso! Voltando para home...");
             router.push('/');
         } else {
             console.log("Erro: Email ou senha incorretos.");
             setWrongInput(true);
         }
-    };
-
-
+    }
     const titleStyle = [
         styles.title,
         isLargeScreen && styles.titleLarge // Apply large style if screen is large
