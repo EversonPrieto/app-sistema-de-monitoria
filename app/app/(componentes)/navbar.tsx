@@ -156,12 +156,12 @@ const styles = StyleSheet.create({
     headerText: {
         fontFamily: 'Inknut Antiqua', // Ensure font is linked
         color: 'white',
-        fontSize: 24,
+        fontSize: 30,
         fontWeight: 'bold',
         textAlign: 'center',
     },
     placeholder: {
-        width: 30 + 16,
+        width: 30,
         height: 30,
     },
     // --- Modal and Menu Styles ---
