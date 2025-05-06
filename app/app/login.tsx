@@ -25,7 +25,7 @@ export default function App() {
         setWrongInput(false);
     
         if (email === validEmail && senha === validsenha) {
-            await AsyncStorage.setItem('usuarioLogado', 'true'); // Salva o status
+            await AsyncStorage.setItem('usuarioLogado', 'true'); 
             alert("Sucesso! Voltando para home...");
             router.push('/');
         } else {
@@ -35,7 +35,7 @@ export default function App() {
     }
     const titleStyle = [
         styles.title,
-        isLargeScreen && styles.titleLarge // Apply large style if screen is large
+        isLargeScreen && styles.titleLarge 
     ];
     const mainContentStyle = [
         styles.mainContent,
@@ -53,7 +53,6 @@ export default function App() {
     return (
         <SafeAreaView style={styles.container}>
             <Navbar />
-            {/* Apply combined styles */}
             <View style={mainContentStyle}>
                 <Text style={titleStyle}>Entrar</Text>
 
@@ -61,7 +60,7 @@ export default function App() {
                     <FontAwesome name="envelope" size={isLargeScreen ? 24 : 20} color="black" style={styles.icon} />
                     <TextInput
                         placeholder="Email"
-                        style={styles.input} // Input text size might not need changing often
+                        style={styles.input} 
                         value={email}
                         onChangeText={setEmail}
                         keyboardType="email-address"
@@ -99,7 +98,6 @@ export default function App() {
     );
 }
 
-// --- Base Styles (Mobile First) ---
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -109,7 +107,7 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         padding: 20,
-        width: '100%', // Ensure it takes full width initially
+        width: '100%', 
     },
     title: {
         color: '#F49F0A',
@@ -128,7 +126,7 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         paddingHorizontal: 15,
         marginBottom: 20,
-        width: '90%', // Relative width for mobile
+        width: '90%', 
         height: 50,
     },
     icon: {
@@ -146,7 +144,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 32,
         borderRadius: 10,
         marginTop: 20,
-        width: '70%', // Relative width for mobile
+        width: '70%', 
         alignItems: 'center',
         shadowColor: "#000",
         shadowOffset: {
@@ -180,25 +178,23 @@ const styles = StyleSheet.create({
         fontSize: 14,
         textAlign: 'center',
     },
-
-    // --- Styles for Larger Screens (applied conditionally) ---
     mainContentLarge: {
-        padding: 40, // Increase padding
-        maxWidth: 600, // Set a max width to prevent excessive stretching
-        alignSelf: 'center' // Center the content block
+        padding: 40, 
+        maxWidth: 600, 
+        alignSelf: 'center' 
     },
     titleLarge: {
-        fontSize: 36, // Make title bigger
-        marginBottom: 40, // Increase spacing
+        fontSize: 36, 
+        marginBottom: 40, 
     },
     inputContainerLarge: {
-        width: '100%', // Use full width of the constrained mainContentLarge
-        maxWidth: 500, // Or set a max width directly if preferred
-        height: 55, // Slightly taller inputs
+        width: '100%', 
+        maxWidth: 500, 
+        height: 55, 
     },
     buttonLarge: {
-        width: '60%', // Button takes less relative space
-        maxWidth: 350, // Add a max width for the button too
-        paddingVertical: 15, // Make button slightly bigger
+        width: '60%', 
+        maxWidth: 350, 
+        paddingVertical: 15, 
     },
 });
