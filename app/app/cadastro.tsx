@@ -11,14 +11,21 @@ export default function App() {
 
   const isLargeScreen = width >= LARGE_SCREEN_BREAKPOINT;
 
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  const [confirmarSenha, setConfirmarSenha] = useState('');
+  const [usuario, setUsuario] = useState({
+    nome: '',
+    email: '',
+    senha: '',
+    confirmarSenha: '',
+  });
+
+  const handleChange = (name: keyof typeof usuario) => (value: string) => {
+    setUsuario((prev) => ({ ...prev, [name]: value }));
+  };
+
 
   const titleStyle = [
     styles.title,
-    isLargeScreen && styles.titleLarge 
+    isLargeScreen && styles.titleLarge
   ];
   const mainContentStyle = [
     styles.mainContent,
@@ -34,6 +41,9 @@ export default function App() {
   ];
 
   const handleCadastro = async () => {
+
+    const { nome, email, senha, confirmarSenha } = usuario;
+
     if (!nome || !email || !senha || !confirmarSenha) {
       mostrarAlerta("Erro", "Preencha todos os campos.");
       return;
@@ -53,10 +63,6 @@ export default function App() {
 
       if (response.ok) {
         mostrarAlerta("Sucesso", "Usuário cadastrado com sucesso!");
-        setNome('');
-        setEmail('');
-        setSenha('');
-        setConfirmarSenha('');
       } else {
         const errorData = await response.json();
         mostrarAlerta("Erro", errorData.error || "Erro ao cadastrar.");
@@ -82,22 +88,47 @@ export default function App() {
 
         <View style={inputContainerStyle}>
           <FontAwesome name="user" size={isLargeScreen ? 24 : 20} color="black" style={styles.icon} />
-          <TextInput placeholder="Nome Completo" style={styles.input} value={nome} onChangeText={setNome} />
+          <TextInput
+            placeholder="Nome Completo"
+            style={styles.input}
+            value={usuario.nome}
+            onChangeText={handleChange('nome')} 
+            autoCapitalize="none"
+          />
         </View>
 
         <View style={inputContainerStyle}>
           <FontAwesome name="envelope" size={isLargeScreen ? 24 : 20} color="black" style={styles.icon} />
-          <TextInput placeholder="Email" style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" />
+          <TextInput
+            placeholder="Email"
+            style={styles.input}
+            value={usuario.email}
+            onChangeText={handleChange('email')} 
+            keyboardType="email-address" 
+            autoCapitalize="none"
+          />
         </View>
 
         <View style={inputContainerStyle}>
           <FontAwesome name="lock" size={isLargeScreen ? 24 : 20} color="black" style={styles.icon} />
-          <TextInput placeholder="Senha" style={styles.input} value={senha} onChangeText={setSenha} secureTextEntry />
+          <TextInput
+            placeholder="Senha"
+            style={styles.input}
+            value={usuario.senha}
+            onChangeText={handleChange('senha')} 
+            secureTextEntry={true} 
+          />
         </View>
 
         <View style={inputContainerStyle}>
           <FontAwesome name="lock" size={isLargeScreen ? 24 : 20} color="black" style={styles.icon} />
-          <TextInput placeholder="Confirmar Senha" style={styles.input} value={confirmarSenha} onChangeText={setConfirmarSenha} secureTextEntry />
+          <TextInput
+            placeholder="Confirmar Senha"
+            style={styles.input}
+            value={usuario.confirmarSenha}
+            onChangeText={handleChange('confirmarSenha')} 
+            secureTextEntry={true} 
+          />
         </View>
 
         <TouchableOpacity style={buttonStyle} onPress={handleCadastro}>
