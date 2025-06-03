@@ -3,12 +3,12 @@ import { Link } from 'expo-router';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, useWindowDimensions, Platform, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import Navbar from './(componentes)/navbar';
+import axios from 'axios'; 
 
 const LARGE_SCREEN_BREAKPOINT = 768;
 
 export default function App() {
   const { width } = useWindowDimensions();
-
   const isLargeScreen = width >= LARGE_SCREEN_BREAKPOINT;
 
   const [usuario, setUsuario] = useState({
@@ -22,26 +22,12 @@ export default function App() {
     setUsuario((prev) => ({ ...prev, [name]: value }));
   };
 
-
-  const titleStyle = [
-    styles.title,
-    isLargeScreen && styles.titleLarge
-  ];
-  const mainContentStyle = [
-    styles.mainContent,
-    isLargeScreen && styles.mainContentLarge
-  ];
-  const inputContainerStyle = [
-    styles.inputContainer,
-    isLargeScreen && styles.inputContainerLarge
-  ];
-  const buttonStyle = [
-    styles.button,
-    isLargeScreen && styles.buttonLarge
-  ];
+  const titleStyle = [styles.title, isLargeScreen && styles.titleLarge];
+  const mainContentStyle = [styles.mainContent, isLargeScreen && styles.mainContentLarge];
+  const inputContainerStyle = [styles.inputContainer, isLargeScreen && styles.inputContainerLarge];
+  const buttonStyle = [styles.button, isLargeScreen && styles.buttonLarge];
 
   const handleCadastro = async () => {
-
     const { nome, email, senha, confirmarSenha } = usuario;
 
     if (!nome || !email || !senha || !confirmarSenha) {
@@ -55,20 +41,20 @@ export default function App() {
     }
 
     try {
-      const response = await fetch('http://localhost:3004/usuarios', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, email, senha }),
+      const response = await axios.post('http://localhost:3004/usuarios', {
+        nome,
+        email,
+        senha
       });
 
-      if (response.ok) {
+      if (response.status === 201 || response.status === 200) {
         mostrarAlerta("Sucesso", "Usuário cadastrado com sucesso!");
       } else {
-        const errorData = await response.json();
-        mostrarAlerta("Erro", errorData.error || "Erro ao cadastrar.");
+        mostrarAlerta("Erro", "Erro inesperado ao cadastrar.");
       }
-    } catch (error) {
-      mostrarAlerta("Erro", "Erro ao conectar com o servidor.");
+    } catch (error: any) {
+      const mensagemErro = error.response?.data?.error || "Erro ao conectar com o servidor.";
+      mostrarAlerta("Erro", mensagemErro);
     }
   };
 
@@ -92,7 +78,7 @@ export default function App() {
             placeholder="Nome Completo"
             style={styles.input}
             value={usuario.nome}
-            onChangeText={handleChange('nome')} 
+            onChangeText={handleChange('nome')}
             autoCapitalize="none"
           />
         </View>
@@ -103,8 +89,8 @@ export default function App() {
             placeholder="Email"
             style={styles.input}
             value={usuario.email}
-            onChangeText={handleChange('email')} 
-            keyboardType="email-address" 
+            onChangeText={handleChange('email')}
+            keyboardType="email-address"
             autoCapitalize="none"
           />
         </View>
@@ -115,8 +101,8 @@ export default function App() {
             placeholder="Senha"
             style={styles.input}
             value={usuario.senha}
-            onChangeText={handleChange('senha')} 
-            secureTextEntry={true} 
+            onChangeText={handleChange('senha')}
+            secureTextEntry={true}
           />
         </View>
 
@@ -126,8 +112,8 @@ export default function App() {
             placeholder="Confirmar Senha"
             style={styles.input}
             value={usuario.confirmarSenha}
-            onChangeText={handleChange('confirmarSenha')} 
-            secureTextEntry={true} 
+            onChangeText={handleChange('confirmarSenha')}
+            secureTextEntry={true}
           />
         </View>
 
@@ -142,7 +128,6 @@ export default function App() {
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
