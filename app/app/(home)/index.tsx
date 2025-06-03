@@ -1,170 +1,197 @@
-import { Link, useRouter } from 'expo-router';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, useWindowDimensions, Alert } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+import React from "react";
+import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
 import Navbar from '../(componentes)/navbar';
-import { useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const LARGE_SCREEN_BREAKPOINT = 768;
-
-export default function HomeScreen() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const router = useRouter();
-  const { width } = useWindowDimensions();
-  const isLargeScreen = width >= LARGE_SCREEN_BREAKPOINT;
-
-  useEffect(() => {
-    const checkLogin = async () => {
-      try {
-        const logged = await AsyncStorage.getItem('usuarioLogado');
-        if (logged === 'true') {
-          setIsLoggedIn(true);
-        } else {
-          setIsLoggedIn(false);
-        }
-      } catch (error) {
-        console.error("Failed to check login status:", error);
-        setIsLoggedIn(false); 
-      }
-    };
-    checkLogin();
-  }, []); 
-
-  const handleLogout = async () => {
-    try {
-      await AsyncStorage.removeItem('usuarioLogado');
-      setIsLoggedIn(false);
-      alert("Logout feito com sucesso!");
-    } catch (error) {
-      alert("Erro, Não foi possível fazer logout.");
-    }
-  };
-
-  const handleTestAlert = () => {
-    alert("Aviso! ISSO DEFINITIVAMENTE É UM AVISO!");
-  }
-
-  const mainContentStyle = [
-    styles.mainContent,
-    isLargeScreen && styles.mainContentLarge
-  ];
-  const titleStyle = [
-    styles.title,
-    isLargeScreen && styles.titleLarge
-  ];
-  const buttonStyle = [
-    styles.button,
-    isLargeScreen && styles.buttonLarge
-  ];
-  const linkButtonTextStyle = [
-    styles.buttonText,
-    isLargeScreen && styles.buttonTextLarge 
-  ];
-
+export default function ForumScreen() {
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <Navbar />
-      <View style={mainContentStyle}>
-        <Text style={titleStyle}> Home</Text>
 
-        {!isLoggedIn && (
-          <>
-            <Link href="/login" style={buttonStyle} asChild>
-              <TouchableOpacity>
-                <Text style={linkButtonTextStyle}>Login</Text>
-              </TouchableOpacity>
-            </Link>
-            <Link href="/cadastro" style={buttonStyle} asChild>
-              <TouchableOpacity>
-                <Text style={linkButtonTextStyle}>Cadastre-se</Text>
-              </TouchableOpacity>
-            </Link>
-          </>
-        )}
-
-        {isLoggedIn && (
-          <TouchableOpacity
-            onPress={handleLogout}
-            style={buttonStyle} 
-          >
-            <Text style={styles.buttonText}>Logout</Text>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.topInput}>
+          <View style={styles.dot} />
+          <TextInput
+            style={styles.input}
+            placeholder="Qual é a sua dúvida?"
+            placeholderTextColor="black"
+          />
+          <TouchableOpacity style={styles.button}>
+            <Text style={styles.buttonText}>Perguntar</Text>
           </TouchableOpacity>
-        )}
+        </View>
 
-        <TouchableOpacity
-          onPress={handleTestAlert}
-          style={buttonStyle} 
-        >
-          <Text style={styles.buttonText}>Testando Alert</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+        <Text style={styles.heading}>Outros usuários já perguntaram....</Text>
+
+        <Text style={styles.question}>Pergunta aleatória número 1?</Text>
+
+        <View style={styles.answerBlock}>
+          <View style={styles.answerHeader}>
+            <View style={styles.dot} />
+            <Text style={styles.answerUser}>Usuário Professor Responde</Text>
+            <View style={styles.responses}>
+              <FontAwesome name="comment-o" size={14} color="#475569" />
+              <Text style={styles.responseText}>3 Respostas</Text>
+            </View>
+          </View>
+          <View style={styles.answer}>
+            <Text>Resposta Professor</Text>
+            <FontAwesome name="star" size={16} color="#f97316" style={styles.star} />
+          </View>
+        </View>
+
+        <View style={styles.answerBlock}>
+          <View style={styles.answerHeader}>
+            <View style={styles.dot} />
+            <Text style={styles.answerUser}>Usuário Monitor Responde</Text>
+          </View>
+          <View style={styles.answer}>
+            <Text>Resposta Monitor</Text>
+            <FontAwesome name="star" size={16} color="#0284c7" style={styles.star} />
+          </View>
+        </View>
+
+        <View style={styles.answerBlock}>
+          <View style={styles.answerHeader}>
+            <View style={styles.dot} />
+            <Text style={styles.answerUser}>Usuário Aluno Responde</Text>
+          </View>
+          <View style={styles.answer}>
+            <Text>Resposta Aluno</Text>
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
+        <Text style={styles.question}>Pergunta aleatória número 2?</Text>
+
+        <View style={styles.answerBlock}>
+          <View style={styles.answerHeader}>
+            <View style={styles.dot} />
+            <Text style={styles.answerUser}>Usuário Monitor Responde</Text>
+            <View style={styles.responses}>
+              <FontAwesome name="comment-o" size={14} color="#475569" />
+              <Text style={styles.responseText}>2 Respostas</Text>
+            </View>
+          </View>
+          <View style={styles.answer}>
+            <Text>Resposta Monitor</Text>
+            <FontAwesome name="star" size={16} color="#0284c7" style={styles.star} />
+          </View>
+        </View>
+
+        <View style={styles.answerBlock}>
+          <View style={styles.answerHeader}>
+            <View style={styles.dot} />
+            <Text style={styles.answerUser}>Usuário Aluno Responde</Text>
+          </View>
+          <View style={styles.answer}>
+            <Text>Resposta Aluno</Text>
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+        <Text style={styles.question}>Pergunta aleatória número 3?</Text>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
-  mainContent: {
-    flex: 1,
-    alignItems: 'center',
+  content: {
     padding: 16,
-    width: '100%',
   },
-  title: {
-    color: '#F49F0A',
-    fontFamily: 'Inter',
-    fontSize: 30,
-    fontWeight: 'bold',
-    marginBottom: 22,
-    marginTop: 20,
-    textAlign: 'center', 
+  topInput: {
+    backgroundColor: "#BFD7EA",
+    borderRadius: 10,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  dot: {
+    width: 16,
+    height: 16,
+    backgroundColor: "#F49F0A",
+    borderRadius: 9999,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: "#BFD7EA",
+    color: "black",
+    fontSize: 14,
   },
   button: {
-    backgroundColor: '#BFD7EA',
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 10,
-    marginTop: 25, 
-    width: '90%', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    minHeight: 45, 
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.20,
-    shadowRadius: 1.41,
-    elevation: 2,
+    backgroundColor: "#F49F0A",
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 9999,
   },
   buttonText: {
-    color: '#000000', 
-    fontFamily: 'Inter', 
-    fontSize: 16, 
-    fontWeight: '500', 
-    textAlign: 'center',
+    color: "white",
+    fontSize: 12,
   },
-  mainContentLarge: {
-    padding: 40,
-    maxWidth: 700, 
-    alignSelf: 'center', 
-  },
-  titleLarge: {
-    fontSize: 38, 
-    marginBottom: 40, 
-    marginTop: 30,
-  },
-  buttonLarge: {
-    width: '70%', 
-    maxWidth: 450,
-    paddingVertical: 15, 
-    marginTop: 30, 
-  },
-  buttonTextLarge: { 
+  heading: {
+    marginTop: 16,
+    marginBottom: 8,
     fontSize: 18,
-  }
+  },
+  question: {
+    backgroundColor: "#BFD7EA",
+    borderRadius: 12,
+    padding: 16,
+    textAlign: "center",
+    fontSize: 16,
+    marginBottom: 12,
+  },
+  answerBlock: {
+    marginBottom: 16,
+  },
+  answerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
+  answerUser: {
+    fontSize: 12,
+    color: "#000000",
+  },
+  responses: {
+    marginLeft: "auto",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  responseText: {
+    fontSize: 12,
+    color: "#475569",
+  },
+  answer: {
+    backgroundColor: "#BFD7EA",
+    borderRadius: 9999,
+    alignSelf: "flex-start",
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    fontSize: 14,
+    color: "black",
+    position: "relative",
+    maxWidth: "90%",
+    marginTop: 2,
+  },
+  star: {
+    position: "absolute",
+    right: 1,
+    top: "50%",
+    transform: [{ translateY: -8 }],
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "black",
+    marginVertical: 16,
+  },
 });

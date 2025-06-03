@@ -19,6 +19,12 @@ function SideMenuContent({ onClose }: SideMenuContentProps) {
             <Link href="/" onPress={onClose} style={styles.menuItem}>
                 <Text style={styles.menuItemText}>Home</Text>
             </Link>
+              <Link href="/login" onPress={onClose} style={styles.menuItem}>
+                <Text style={styles.menuItemText}>Login</Text>
+            </Link>
+              <Link href="/cadastro" onPress={onClose} style={styles.menuItem}>
+                <Text style={styles.menuItemText}>Cadastre-se</Text>
+            </Link>
         </View>
     );
 }
