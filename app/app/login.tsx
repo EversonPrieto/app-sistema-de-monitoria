@@ -1,42 +1,85 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link, useRouter } from 'expo-router';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Alert, useWindowDimensions } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  Alert,
+  useWindowDimensions,
+  ActivityIndicator, // Para feedback de carregamento
+} from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import Navbar from './(componentes)/navbar';
+import Navbar from './(componentes)/navbar'; // Verifique se o caminho está correto
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LARGE_SCREEN_BREAKPOINT = 768;
 
-export default function App() {
+export default function LoginPage() { // Renomeei para LoginPage para clareza, ajuste se necessário
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [wrongInput, setWrongInput] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Para feedback de carregamento
 
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isLargeScreen = width >= LARGE_SCREEN_BREAKPOINT;
 
   const handleLogin = async () => {
+    if (!email || !senha) {
+      Alert.alert('Erro', 'Por favor, preencha email e senha.');
+      return;
+    }
+
     setWrongInput(false);
+    setIsLoading(true); // Inicia o carregamento
 
     try {
-      const response = await axios.post('http://localhost:3004/usuarios/login', {
+      const response = await axios.post('http://localhost:3004/usuarios/login', { // Certifique-se que o IP/URL está correto para seu emulador/dispositivo
         email,
-        senha
+        senha,
       });
 
-      await AsyncStorage.setItem('usuarioLogado', 'true');
+      // Login bem-sucedido, backend retornou dados do usuário
+      const userData = response.data; // { id, nome, email }
 
-      Alert.alert('Login realizado com sucesso!');
-      router.push('/');
+      // Salvar dados do usuário no AsyncStorage
+      await AsyncStorage.setItem('userData', JSON.stringify(userData));
+      // Opcional: um marcador simples de que o usuário está logado
+      await AsyncStorage.setItem('userToken', 'dummy-token-if-no-real-token'); // Ou um token real se o backend enviar
+      await AsyncStorage.setItem('isLoggedIn', 'true');
+
+
+      setIsLoading(false); // Termina o carregamento
+      Alert.alert('Sucesso!', 'Login realizado com sucesso!');
+      router.replace('/'); // Usar replace para não poder voltar para a tela de login
     } catch (error) {
+      setIsLoading(false); // Termina o carregamento
+      setWrongInput(true); // Ativa a mensagem de erro
+
       if (axios.isAxiosError(error)) {
-        console.log('Erro ao fazer login:', error.response?.data || error.message);
+        if (error.response) {
+          // O servidor respondeu com um status de erro (4xx, 5xx)
+          console.log('Erro ao fazer login (resposta do servidor):', error.response.data);
+          // A mensagem de erro do backend já é "Login ou Senha incorretos"
+          // Alert.alert('Erro no Login', error.response.data.erro || 'E-mail ou senha incorretos.');
+        } else if (error.request) {
+          // A requisição foi feita mas não houve resposta (ex: servidor offline)
+          console.log('Erro ao fazer login (sem resposta):', error.request);
+          Alert.alert('Erro de Rede', 'Não foi possível conectar ao servidor. Verifique sua conexão ou se o servidor está online.');
+        } else {
+          // Algo aconteceu ao configurar a requisição
+          console.log('Erro ao fazer login (configuração):', error.message);
+          Alert.alert('Erro', 'Ocorreu um erro ao tentar fazer login.');
+        }
       } else {
-        console.log('Erro ao fazer login:', String(error));
+        // Erro não relacionado ao Axios
+        console.log('Erro desconhecido ao fazer login:', String(error));
+        Alert.alert('Erro', 'Ocorreu um erro inesperado.');
       }
-      setWrongInput(true);
     }
   };
 
@@ -61,6 +104,7 @@ export default function App() {
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
+            editable={!isLoading} // Desabilitar enquanto carrega
           />
         </View>
 
@@ -73,16 +117,26 @@ export default function App() {
             onChangeText={setSenha}
             secureTextEntry={true}
             onSubmitEditing={handleLogin}
+            editable={!isLoading} // Desabilitar enquanto carrega
           />
-          <FontAwesome name="eye" size={isLargeScreen ? 24 : 20} color="black" style={styles.icon} />
+          {/* O ícone de olho geralmente é para mostrar/esconder senha, você precisaria de mais lógica para isso */}
+          {/* <FontAwesome name="eye" size={isLargeScreen ? 24 : 20} color="black" style={styles.icon} /> */}
         </View>
 
-        {wrongInput && (
+        {wrongInput && !isLoading && ( // Só mostra se não estiver carregando
           <Text style={styles.errorText}>E-mail ou senha incorretos!</Text>
         )}
 
-        <TouchableOpacity style={buttonStyle} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Acessar</Text>
+        <TouchableOpacity
+          style={[buttonStyle, isLoading && styles.buttonDisabled]} // Estilo para botão desabilitado
+          onPress={handleLogin}
+          disabled={isLoading} // Desabilitar botão enquanto carrega
+        >
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#000000" />
+          ) : (
+            <Text style={styles.buttonText}>Acessar</Text>
+          )}
         </TouchableOpacity>
 
         <Text style={styles.loginText}>
@@ -103,7 +157,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#F49F0A',
-    fontFamily: 'Inter',
+    fontFamily: 'Inter', // Certifique-se que esta fonte está carregada no seu projeto
     fontSize: 30,
     fontWeight: 'bold',
     marginBottom: 25,
@@ -127,8 +181,9 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: '100%',
-    fontFamily: 'Inter',
+    fontFamily: 'Inter', // Certifique-se que esta fonte está carregada
     fontSize: 16,
+    color: 'black', // Adicionado para garantir que o texto digitado seja visível
   },
   button: {
     backgroundColor: '#BFD7EA',
@@ -144,16 +199,19 @@ const styles = StyleSheet.create({
     shadowRadius: 2.62,
     elevation: 4,
   },
+  buttonDisabled: { // Estilo para botão desabilitado
+    backgroundColor: '#A8B8C2', // Um tom mais claro/cinza
+  },
   buttonText: {
     color: '#000000',
-    fontFamily: 'Inter',
+    fontFamily: 'Inter', // Certifique-se que esta fonte está carregada
     fontSize: 16,
     fontWeight: '500',
   },
   loginText: {
     color: '#000000',
     marginTop: 15,
-    fontFamily: 'Inter',
+    fontFamily: 'Inter', // Certifique-se que esta fonte está carregada
     fontSize: 14,
   },
   loginButton: {
@@ -162,11 +220,12 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: 'red',
-    fontFamily: 'Inter',
+    fontFamily: 'Inter', // Certifique-se que esta fonte está carregada
     marginBottom: 15,
     fontSize: 14,
     textAlign: 'center',
   },
+  // Estilos responsivos (mainContentLarge, titleLarge, etc.) permanecem os mesmos
   mainContentLarge: {
     padding: 40,
     maxWidth: 600,
