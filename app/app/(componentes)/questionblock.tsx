@@ -1,178 +1,205 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { Pergunta as PerguntaType, Resposta as RespostaType } from '../../assets/types/types';
+import { Pergunta as PerguntaType, Resposta as RespostaType, TipoUsuario } from '../../assets/types/types';
 
 const API_BASE_URL = 'http://localhost:3004';
 
+// Componente para renderizar a estrela de prestígio
+const UserRoleBadge = ({ tipo }: { tipo: TipoUsuario }) => {
+  if (tipo === 'PROFESSOR') {
+    return <FontAwesome name="star" size={14} color="#FFC700" style={styles.badgeIcon} />;
+  }
+  if (tipo === 'MONITOR') {
+    return <FontAwesome name="star" size={14} color="#3B82F6" style={styles.badgeIcon} />;
+  }
+  return null; // Não mostra nada para Alunos
+};
+
 interface QuestionBlockProps {
-    pergunta: PerguntaType;
-    onReplyPosted: () => void;
+  pergunta: PerguntaType;
+  onReplyPosted: () => void;
 }
 
 const QuestionBlock: React.FC<QuestionBlockProps> = ({ pergunta, onReplyPosted }) => {
-    const [replyText, setReplyText] = useState('');
-    const [isSubmittingReply, setIsSubmittingReply] = useState(false);
-    const [showReplyInput, setShowReplyInput] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+  const [showReplyInput, setShowReplyInput] = useState(false);
 
-    const handleToggleReplyInput = async () => {
-        if (!showReplyInput) { // Só verificar o login se estivermos tentando ABRIR o input
-            try {
-                const loggedInStatus = await AsyncStorage.getItem('isLoggedIn');
-                if (loggedInStatus !== 'true') {
-                    alert('Login Necessário, Você precisa estar logado para responder. Por favor, faça login ou crie uma conta.');
-                    return; // Impede que o input de resposta seja mostrado
-                }
-                // Se logado, prossegue para mostrar o input
-                setShowReplyInput(true);
-            } catch (error) {
-                console.error("Erro ao verificar status de login ao tentar responder:", error);
-                Alert.alert('Erro', 'Não foi possível verificar seu status de login. Tente novamente.');
-                return; // Impede em caso de erro na verificação
-            }
-        } else {
-            // Se o input já estiver visível, clicar novamente apenas o oculta
-            setShowReplyInput(false);
-        }
+  // Lógica de ordenação das respostas usando useMemo para performance
+  const sortedRespostas = useMemo(() => {
+    if (!pergunta.respostas || pergunta.respostas.length === 0) {
+      return [];
+    }
+
+    const getPriority = (tipo: TipoUsuario): number => {
+      switch (tipo) {
+        case 'PROFESSOR': return 0;
+        case 'MONITOR':   return 1;
+        case 'ALUNO':     return 2;
+        default:          return 3;
+      }
     };
 
-    const handlePostReply = async () => {
-        if (replyText.trim() === '') {
-            Alert.alert('Atenção', 'Por favor, digite sua resposta.');
+    return [...pergunta.respostas].sort((a, b) => {
+      const priorityA = getPriority(a.usuario.tipo);
+      const priorityB = getPriority(b.usuario.tipo);
+      
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB; // Ordena por prioridade
+      }
+      // Se a prioridade for a mesma, ordena por data (mais recente primeiro)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [pergunta.respostas]);
+
+  // Função para abrir/fechar o campo de resposta (lógica original)
+  const handleToggleReplyInput = async () => {
+    if (!showReplyInput) {
+        try {
+            const loggedInStatus = await AsyncStorage.getItem('isLoggedIn');
+            if (loggedInStatus !== 'true') {
+                alert('Login Necessário, Você precisa estar logado para responder. Por favor, faça login ou crie uma conta.');
+                return;
+            }
+            setShowReplyInput(true);
+        } catch (error) {
+            console.error("Erro ao verificar status de login ao tentar responder:", error);
+            Alert.alert('Erro', 'Não foi possível verificar seu status de login. Tente novamente.');
             return;
         }
+    } else {
+        setShowReplyInput(false);
+    }
+  };
 
-        setIsSubmittingReply(true);
-
-        try {
-            // A verificação de login já foi feita (ou deveria ter sido) ao abrir o input,
-            // mas uma dupla verificação aqui não faz mal, especialmente se a lógica de UI mudar.
-            const loggedInStatus = await AsyncStorage.getItem('isLoggedIn');
-            const userDataString = await AsyncStorage.getItem('userData');
-
-            if (loggedInStatus !== 'true' || !userDataString) {
-                Alert.alert(
-                    'Login Necessário',
-                    'Sua sessão expirou ou você não está logado. Por favor, faça login para responder.',
-                    [{ text: 'OK' }]
-                );
-                setIsSubmittingReply(false);
-                setShowReplyInput(false); // Esconder input se o login falhar aqui
-                return;
-            }
-
-            const userData = JSON.parse(userDataString);
-            const usuarioId = userData.id;
-
-            if (!usuarioId) {
-                Alert.alert('Erro', 'Não foi possível identificar o usuário. Tente fazer login novamente.');
-                setIsSubmittingReply(false);
-                return;
-            }
-
-            const replyPayload = {
-                descricao: replyText,
-                perguntaId: pergunta.id,
-                usuarioId: usuarioId,
-            };
-
-            const response = await axios.post<RespostaType>(`${API_BASE_URL}/respostas`, replyPayload);
-
-            if (response.status === 201) {
-                Alert.alert('Sucesso!', 'Sua resposta foi enviada.');
-                setReplyText('');
-                setShowReplyInput(false);
-                onReplyPosted();
-            } else {
-                Alert.alert('Erro', `Não foi possível enviar sua resposta. Status: ${response.status}`);
-            }
-        } catch (error) {
-            console.error("Erro ao enviar resposta:", error);
-            if (axios.isAxiosError(error) && error.response) {
-                Alert.alert('Erro ao enviar resposta', error.response.data?.error || 'Ocorreu um problema no servidor.');
-            } else {
-                Alert.alert('Erro', 'Não foi possível enviar sua resposta. Verifique sua conexão.');
-            }
-        } finally {
+  // Função para postar a resposta (lógica original)
+  const handlePostReply = async () => {
+    if (replyText.trim() === '') {
+        Alert.alert('Atenção', 'Por favor, digite sua resposta.');
+        return;
+    }
+    setIsSubmittingReply(true);
+    try {
+        const loggedInStatus = await AsyncStorage.getItem('isLoggedIn');
+        const userDataString = await AsyncStorage.getItem('userData');
+        if (loggedInStatus !== 'true' || !userDataString) {
+            Alert.alert('Login Necessário', 'Sua sessão expirou ou você não está logado. Por favor, faça login para responder.', [{ text: 'OK' }]);
             setIsSubmittingReply(false);
+            setShowReplyInput(false);
+            return;
         }
-    };
+        const userData = JSON.parse(userDataString);
+        const usuarioId = userData.id;
+        if (!usuarioId) {
+            Alert.alert('Erro', 'Não foi possível identificar o usuário. Tente fazer login novamente.');
+            setIsSubmittingReply(false);
+            return;
+        }
+        const replyPayload = {
+            descricao: replyText,
+            perguntaId: pergunta.id,
+            usuarioId: usuarioId,
+        };
+        const response = await axios.post<RespostaType>(`${API_BASE_URL}/respostas`, replyPayload);
+        if (response.status === 201) {
+            Alert.alert('Sucesso!', 'Sua resposta foi enviada.');
+            setReplyText('');
+            setShowReplyInput(false);
+            onReplyPosted();
+        } else {
+            Alert.alert('Erro', `Não foi possível enviar sua resposta. Status: ${response.status}`);
+        }
+    } catch (error) {
+        console.error("Erro ao enviar resposta:", error);
+        if (axios.isAxiosError(error) && error.response) {
+            Alert.alert('Erro ao enviar resposta', error.response.data?.error || 'Ocorreu um problema no servidor.');
+        } else {
+            Alert.alert('Erro', 'Não foi possível enviar sua resposta. Verifique sua conexão.');
+        }
+    } finally {
+        setIsSubmittingReply(false);
+    }
+  };
 
-    const shouldShowDescription = typeof pergunta.descricao === 'string' && pergunta.descricao.trim() !== '';
+  const shouldShowDescription = typeof pergunta.descricao === 'string' && pergunta.descricao.trim() !== '';
 
-    return (
-        <View style={styles.questionContainer}>
-            <View style={styles.questionHeader}>
-                <FontAwesome name="user-circle" size={20} color="#508CA4" style={styles.authorIcon} />
-                <Text style={styles.authorName}>{pergunta.usuario.nome} perguntou:</Text>
-            </View>
-
-            <Text style={styles.questionTitle}>{pergunta.titulo}</Text>
-
-            {shouldShowDescription && (
-                <Text style={styles.questionDescription}>{pergunta.descricao}</Text>
-            )}
-
-            {pergunta.respostas && pergunta.respostas.length > 0 && (
-                <View style={styles.answersSection}>
-                    <Text style={styles.answersHeading}>
-                        {pergunta.respostas.length} {pergunta.respostas.length === 1 ? 'Resposta' : 'Respostas'}
-                    </Text>
-                    {pergunta.respostas.map((resposta) => (
-                        <View key={resposta.id} style={styles.answerBlock}>
-                            <View style={styles.answerHeader}>
-                                <View style={styles.dot} />
-                                <Text style={styles.answerUser}>{resposta.usuario.nome} respondeu:</Text>
-                            </View>
-                            <View style={styles.answer}>
-                                <Text style={styles.answerText}>{resposta.descricao}</Text>
-                            </View>
-                        </View>
-                    ))}
-                </View>
-            )}
-            {(!pergunta.respostas || pergunta.respostas.length === 0) && (
-                <Text style={styles.noAnswersText}>Ainda não há respostas para esta pergunta.</Text>
-            )}
-
-            <TouchableOpacity style={styles.replyToggleButton} onPress={handleToggleReplyInput}>
-                <FontAwesome name={showReplyInput ? "times-circle" : "reply"} size={18} color="#508CA4" />
-                <Text style={styles.replyToggleButtonText}>
-                    {showReplyInput ? 'Cancelar Resposta' : 'Responder'}
-                </Text>
-            </TouchableOpacity>
-
-            {showReplyInput && (
-                <View style={styles.replyInputContainer}>
-                    <TextInput
-                        style={styles.replyInput}
-                        placeholder="Digite sua resposta..."
-                        placeholderTextColor="rgba(0,0,0,0.5)"
-                        multiline
-                        value={replyText}
-                        onChangeText={setReplyText}
-                        editable={!isSubmittingReply}
-                    />
-                    <TouchableOpacity
-                        style={[styles.submitReplyButton, isSubmittingReply && styles.submitReplyButtonDisabled]}
-                        onPress={handlePostReply}
-                        disabled={isSubmittingReply}
-                    >
-                        {isSubmittingReply ? (
-                            <ActivityIndicator size="small" color="white" />
-                        ) : (
-                            <Text style={styles.submitReplyButtonText}>Enviar Resposta</Text>
-                        )}
-                    </TouchableOpacity>
-                </View>
-            )}
-            <View style={styles.divider} />
+  return (
+    <View style={styles.questionContainer}>
+        <View style={styles.questionHeader}>
+            <FontAwesome name="user-circle" size={20} color="#508CA4" style={styles.authorIcon} />
+            <Text style={styles.authorName}>{pergunta.usuario.nome} perguntou:</Text>
         </View>
-    );
+
+        <Text style={styles.questionTitle}>{pergunta.titulo}</Text>
+
+        {shouldShowDescription && (
+            <Text style={styles.questionDescription}>{pergunta.descricao}</Text>
+        )}
+
+        {sortedRespostas && sortedRespostas.length > 0 && (
+            <View style={styles.answersSection}>
+                <Text style={styles.answersHeading}>
+                    {sortedRespostas.length} {sortedRespostas.length === 1 ? 'Resposta' : 'Respostas'}
+                </Text>
+                {sortedRespostas.map((resposta) => (
+                    <View key={resposta.id} style={styles.answerBlock}>
+                        <View style={styles.answerHeader}>
+                            <View style={styles.dot} />
+                            <Text style={styles.answerUser}>{resposta.usuario.nome}</Text>
+                            <UserRoleBadge tipo={resposta.usuario.tipo} />
+                            <Text style={styles.answerUserLabel}> respondeu:</Text>
+                        </View>
+                        <View style={styles.answer}>
+                            <Text style={styles.answerText}>{resposta.descricao}</Text>
+                        </View>
+                    </View>
+                ))}
+            </View>
+        )}
+        {(!pergunta.respostas || pergunta.respostas.length === 0) && (
+            <Text style={styles.noAnswersText}>Ainda não há respostas para esta pergunta.</Text>
+        )}
+
+        <TouchableOpacity style={styles.replyToggleButton} onPress={handleToggleReplyInput}>
+            <FontAwesome name={showReplyInput ? "times-circle" : "reply"} size={18} color="#508CA4" />
+            <Text style={styles.replyToggleButtonText}>
+                {showReplyInput ? 'Cancelar Resposta' : 'Responder'}
+            </Text>
+        </TouchableOpacity>
+
+        {showReplyInput && (
+            <View style={styles.replyInputContainer}>
+                <TextInput
+                    style={styles.replyInput}
+                    placeholder="Digite sua resposta..."
+                    placeholderTextColor="rgba(0,0,0,0.5)"
+                    multiline
+                    value={replyText}
+                    onChangeText={setReplyText}
+                    editable={!isSubmittingReply}
+                />
+                <TouchableOpacity
+                    style={[styles.submitReplyButton, isSubmittingReply && styles.submitReplyButtonDisabled]}
+                    onPress={handlePostReply}
+                    disabled={isSubmittingReply}
+                >
+                    {isSubmittingReply ? (
+                        <ActivityIndicator size="small" color="white" />
+                    ) : (
+                        <Text style={styles.submitReplyButtonText}>Enviar Resposta</Text>
+                    )}
+                </TouchableOpacity>
+            </View>
+        )}
+        <View style={styles.divider} />
+    </View>
+  );
 };
 
+// Bloco de estilos completo e identado
 const styles = StyleSheet.create({
     questionContainer: {
         marginBottom: 10,
@@ -226,7 +253,7 @@ const styles = StyleSheet.create({
     answerHeader: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 8,
+        gap: 6,
         marginBottom: 6,
     },
     dot: {
@@ -239,6 +266,14 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: "#475569",
         fontWeight: '600',
+    },
+    badgeIcon: {
+        marginLeft: 2,
+    },
+    answerUserLabel: {
+        fontSize: 13,
+        color: "#475569",
+        fontWeight: 'normal',
     },
     answer: {
         backgroundColor: "#F0F9FF",

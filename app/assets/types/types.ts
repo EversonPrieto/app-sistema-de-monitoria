@@ -1,24 +1,29 @@
-// Em src/assets/types/types.ts ou similar
+// Arquivo: src/assets/types/types.ts
 
+// 1. Defina o tipo para o Enum, espelhando o schema.prisma
+export type TipoUsuario = "ALUNO" | "MONITOR" | "PROFESSOR";
+
+// 2. Garanta que a interface do usuário inclua o 'tipo'
 export interface Usuario {
-  id: string; // ou number
+  id: number;
   nome: string;
-  email?: string;
+  tipo: TipoUsuario; // <-- CAMPO ESSENCIAL
 }
 
+// 3. Interface da Resposta
 export interface Resposta {
-  id: string; // ou number
-  descricao: string; // <<< ALINHADO COM A ROTA DE CRIAÇÃO DE RESPOSTA
-  usuario: Usuario;
-  perguntaId?: string; // A API de criação de resposta não retorna isso no corpo, mas o GET pode incluir
-  // Adicione createdAt, updatedAt se vierem da API e forem úteis
+  id: number;
+  descricao: string;
+  createdAt: string; // ou Date
+  usuario: Usuario; // <-- Usa a interface Usuario completa
 }
 
+// 4. Interface da Pergunta
 export interface Pergunta {
-  id: string; // ou number
+  id: number;
   titulo: string;
-  descricao?: string | null; // Descrição da pergunta
+  descricao?: string;
+  createdAt: string; // ou Date
   usuario: Usuario;
-  respostas: Resposta[];
-  // Adicione createdAt, updatedAt se vierem da API e forem úteis
+  respostas: Resposta[]; // <-- Usa um array de Respostas completas
 }

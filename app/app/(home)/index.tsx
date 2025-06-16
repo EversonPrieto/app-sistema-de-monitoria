@@ -163,6 +163,7 @@ export default function ForumScreen() {
         </View>
 
         <Text style={styles.feedHeading}>Perguntas da Comunidade</Text>
+        {/* Perguntas da Instituição ou Outros alunos Perguntaram... */}
 
         {isLoadingPerguntas && !refreshing ? (
           <ActivityIndicator size="large" color="#508CA4" style={styles.listLoadingIndicator} />
