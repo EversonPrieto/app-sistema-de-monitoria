@@ -3,11 +3,10 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityInd
 import { FontAwesome } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { Pergunta as PerguntaType, Resposta as RespostaType, TipoUsuario } from '../../assets/types/types';
+import { Pergunta as PerguntaType, Resposta as RespostaType, TipoUsuario, Usuario as UsuarioType } from '../../assets/types/types';
 
 const API_BASE_URL = 'http://localhost:3004';
 
-// Componente para renderizar a estrela de prestígio
 const UserRoleBadge = ({ tipo }: { tipo: TipoUsuario }) => {
   if (tipo === 'PROFESSOR') {
     return <FontAwesome name="star" size={14} color="#FFC700" style={styles.badgeIcon} />;
@@ -15,7 +14,14 @@ const UserRoleBadge = ({ tipo }: { tipo: TipoUsuario }) => {
   if (tipo === 'MONITOR') {
     return <FontAwesome name="star" size={14} color="#3B82F6" style={styles.badgeIcon} />;
   }
-  return null; // Não mostra nada para Alunos
+  return null;
+};
+
+const getDisplayName = (usuario: UsuarioType): string => {
+  if (usuario.tipo === 'PROFESSOR' || usuario.tipo === 'MONITOR') {
+    return usuario.nome;
+  }
+  return 'Aluno';
 };
 
 interface QuestionBlockProps {
@@ -28,12 +34,10 @@ const QuestionBlock: React.FC<QuestionBlockProps> = ({ pergunta, onReplyPosted }
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const [showReplyInput, setShowReplyInput] = useState(false);
 
-  // Lógica de ordenação das respostas usando useMemo para performance
   const sortedRespostas = useMemo(() => {
     if (!pergunta.respostas || pergunta.respostas.length === 0) {
       return [];
     }
-
     const getPriority = (tipo: TipoUsuario): number => {
       switch (tipo) {
         case 'PROFESSOR': return 0;
@@ -42,20 +46,16 @@ const QuestionBlock: React.FC<QuestionBlockProps> = ({ pergunta, onReplyPosted }
         default:          return 3;
       }
     };
-
     return [...pergunta.respostas].sort((a, b) => {
       const priorityA = getPriority(a.usuario.tipo);
       const priorityB = getPriority(b.usuario.tipo);
-      
       if (priorityA !== priorityB) {
-        return priorityA - priorityB; // Ordena por prioridade
+        return priorityA - priorityB;
       }
-      // Se a prioridade for a mesma, ordena por data (mais recente primeiro)
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }, [pergunta.respostas]);
 
-  // Função para abrir/fechar o campo de resposta (lógica original)
   const handleToggleReplyInput = async () => {
     if (!showReplyInput) {
         try {
@@ -75,7 +75,6 @@ const QuestionBlock: React.FC<QuestionBlockProps> = ({ pergunta, onReplyPosted }
     }
   };
 
-  // Função para postar a resposta (lógica original)
   const handlePostReply = async () => {
     if (replyText.trim() === '') {
         Alert.alert('Atenção', 'Por favor, digite sua resposta.');
@@ -130,7 +129,7 @@ const QuestionBlock: React.FC<QuestionBlockProps> = ({ pergunta, onReplyPosted }
     <View style={styles.questionContainer}>
         <View style={styles.questionHeader}>
             <FontAwesome name="user-circle" size={20} color="#508CA4" style={styles.authorIcon} />
-            <Text style={styles.authorName}>{pergunta.usuario.nome} perguntou:</Text>
+            <Text style={styles.authorName}>{getDisplayName(pergunta.usuario)} perguntou:</Text>
         </View>
 
         <Text style={styles.questionTitle}>{pergunta.titulo}</Text>
@@ -148,7 +147,7 @@ const QuestionBlock: React.FC<QuestionBlockProps> = ({ pergunta, onReplyPosted }
                     <View key={resposta.id} style={styles.answerBlock}>
                         <View style={styles.answerHeader}>
                             <View style={styles.dot} />
-                            <Text style={styles.answerUser}>{resposta.usuario.nome}</Text>
+                            <Text style={styles.answerUser}>{getDisplayName(resposta.usuario)}</Text>
                             <UserRoleBadge tipo={resposta.usuario.tipo} />
                             <Text style={styles.answerUserLabel}> respondeu:</Text>
                         </View>
@@ -159,38 +158,21 @@ const QuestionBlock: React.FC<QuestionBlockProps> = ({ pergunta, onReplyPosted }
                 ))}
             </View>
         )}
+        
         {(!pergunta.respostas || pergunta.respostas.length === 0) && (
             <Text style={styles.noAnswersText}>Ainda não há respostas para esta pergunta.</Text>
         )}
 
         <TouchableOpacity style={styles.replyToggleButton} onPress={handleToggleReplyInput}>
             <FontAwesome name={showReplyInput ? "times-circle" : "reply"} size={18} color="#508CA4" />
-            <Text style={styles.replyToggleButtonText}>
-                {showReplyInput ? 'Cancelar Resposta' : 'Responder'}
-            </Text>
+            <Text style={styles.replyToggleButtonText}>{showReplyInput ? 'Cancelar Resposta' : 'Responder'}</Text>
         </TouchableOpacity>
 
         {showReplyInput && (
             <View style={styles.replyInputContainer}>
-                <TextInput
-                    style={styles.replyInput}
-                    placeholder="Digite sua resposta..."
-                    placeholderTextColor="rgba(0,0,0,0.5)"
-                    multiline
-                    value={replyText}
-                    onChangeText={setReplyText}
-                    editable={!isSubmittingReply}
-                />
-                <TouchableOpacity
-                    style={[styles.submitReplyButton, isSubmittingReply && styles.submitReplyButtonDisabled]}
-                    onPress={handlePostReply}
-                    disabled={isSubmittingReply}
-                >
-                    {isSubmittingReply ? (
-                        <ActivityIndicator size="small" color="white" />
-                    ) : (
-                        <Text style={styles.submitReplyButtonText}>Enviar Resposta</Text>
-                    )}
+                <TextInput style={styles.replyInput} placeholder="Digite sua resposta..." multiline value={replyText} onChangeText={setReplyText} editable={!isSubmittingReply} />
+                <TouchableOpacity style={[styles.submitReplyButton, isSubmittingReply && styles.submitReplyButtonDisabled]} onPress={handlePostReply} disabled={isSubmittingReply}>
+                    {isSubmittingReply ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.submitReplyButtonText}>Enviar Resposta</Text>}
                 </TouchableOpacity>
             </View>
         )}
@@ -199,7 +181,6 @@ const QuestionBlock: React.FC<QuestionBlockProps> = ({ pergunta, onReplyPosted }
   );
 };
 
-// Bloco de estilos completo e identado
 const styles = StyleSheet.create({
     questionContainer: {
         marginBottom: 10,

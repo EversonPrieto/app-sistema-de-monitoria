@@ -1,29 +1,26 @@
 import { Link } from 'expo-router';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Alert, useWindowDimensions } from 'react-native';
-
-const LARGE_SCREEN_BREAKPOINT = 768;
-
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
 
 export default function NotFoundScreen() {
-   const { width, height } = useWindowDimensions();
-
-  const isLargeScreen = width >= LARGE_SCREEN_BREAKPOINT;
-  
-  const buttonStyle = [
-    styles.button,
-    isLargeScreen && styles.buttonLarge
-  ];
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.mainContent}>
-        <Text style={styles.title}>Tela não encontrada!</Text>
+
+        <FontAwesome name="compass" size={100} color="#CBD5E1" style={styles.icon} />
+
+        <Text style={styles.title}>Oops! Página Não Encontrada</Text>
+
+        <Text style={styles.subtitle}>
+          Parece que o link que você seguiu está quebrado ou a página foi removida.
+        </Text>
         
-        <Link href="/" style={buttonStyle} asChild>
-          <TouchableOpacity>
+        <Link href="/" asChild>
+          <TouchableOpacity style={styles.button}>
             <Text style={styles.buttonText}>Voltar para a Home</Text>
           </TouchableOpacity>
         </Link>
+        
       </View>
     </SafeAreaView>
   );
@@ -32,49 +29,52 @@ export default function NotFoundScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#F8FAFC', 
   },
   mainContent: {
     flex: 1,
     alignItems: 'center',
-    padding: 16,
+    justifyContent: 'center', 
+    padding: 24,
     width: '100%',
   },
+  icon: {
+    marginBottom: 40,
+  },
   title: {
-    color: '#F49F0A',
-    fontFamily: 'Inter',
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 22,
-    marginTop: 20,
+    color: '#1E293B', 
     textAlign: 'center',
+    marginBottom: 12,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#475569', 
+    textAlign: 'center',
+    lineHeight: 24,
+    maxWidth: 320, 
+    marginBottom: 30,
   },
   button: {
-    backgroundColor: '#BFD7EA',
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 10,
-    marginTop: 20,
-    width: '70%', 
+    backgroundColor: '#F49F0A', 
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 30, 
+    flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: "#000",
+    shadowColor: "#F49F0A", 
     shadowOffset: {
         width: 0,
-        height: 2,
+        height: 4,
     },
-    shadowOpacity: 0.23,
-    shadowRadius: 2.62,
-    elevation: 4,
-},
-buttonText: {
-    color: '#000000',
-    fontFamily: 'Inter',
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  buttonText: {
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '500',
-},
-buttonLarge: {
-  width: '60%', 
-  maxWidth: 350, 
-  paddingVertical: 15, 
-},
+    fontWeight: 'bold',
+  },
 });
