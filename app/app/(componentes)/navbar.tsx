@@ -22,12 +22,12 @@ type HrefType = LinkProps['href'];
 
 const navItems: { href: HrefType; label: string; icon: keyof typeof FontAwesome.glyphMap }[] = [
     { href: "/", label: "Home", icon: "home" },
-    { href: "/telas/sobre", label: "Sobre Nós", icon: "info-circle" },
+    { href: "/sobre", label: "Sobre Nós", icon: "info-circle" },
 ];
 
 const authItems: { href: HrefType; label: string; icon: keyof typeof FontAwesome.glyphMap }[] = [
-    { href: "/telas/login", label: "Login", icon: "sign-in" },
-    { href: "/telas/cadastro", label: "Cadastre-se", icon: "user-plus" },
+    { href: "/login", label: "Login", icon: "sign-in" },
+    { href: "/cadastro", label: "Cadastre-se", icon: "user-plus" },
 ];
 
 function SideMenuContent({ onClose, isLoggedIn, userName, onLogout }: SideMenuContentProps) {
@@ -36,7 +36,7 @@ function SideMenuContent({ onClose, isLoggedIn, userName, onLogout }: SideMenuCo
     const handleLogoutPress = () => {
         onLogout();
         onClose();
-        router.replace('/telas/login');
+        router.replace('/login');
     };
 
     return (

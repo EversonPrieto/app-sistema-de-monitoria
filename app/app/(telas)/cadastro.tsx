@@ -122,7 +122,7 @@ export default function App() {
         </TouchableOpacity>
 
         <Text style={styles.loginText}>
-          Já possui uma conta? <Link href="/telas/login" style={styles.loginButton}>Faça Login</Link>
+          Já possui uma conta? <Link href="/login" style={styles.loginButton}>Faça Login</Link>
         </Text>
       </View>
     </SafeAreaView>

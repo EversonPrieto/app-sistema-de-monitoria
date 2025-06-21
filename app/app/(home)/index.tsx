@@ -1,45 +1,31 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  RefreshControl,
-} from "react-native";
+import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, RefreshControl,} from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import Navbar from '../(componentes)/navbar'; // Ajuste o caminho se necessário
+import Navbar from '../(componentes)/navbar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import QuestionBlock from "../(componentes)/questionblock"; // Ajuste o caminho se necessário
-import { Pergunta } from '../../assets/types/types'; // Ajuste o caminho se necessário
+import QuestionBlock from "../(componentes)/questionblock";
+import { Pergunta } from '../../assets/types/types';
 
-const API_BASE_URL = 'http://localhost:3004'; // Ajuste conforme sua configuração de backend
+const API_BASE_URL = 'http://localhost:3004';
 
 export default function ForumScreen() {
   const [newQuestionText, setNewQuestionText] = useState('');
-  const [isSubmittingQuestion, setIsSubmittingQuestion] = useState(false); // Renomeado para clareza
+  const [isSubmittingQuestion, setIsSubmittingQuestion] = useState(false);
 
   const [perguntas, setPerguntas] = useState<Pergunta[]>([]);
   const [isLoadingPerguntas, setIsLoadingPerguntas] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchPerguntas = async (showLoadingIndicator = true) => {
-    if (showLoadingIndicator && !refreshing) { // Não mostrar loading principal se já estiver em refresh
+    if (showLoadingIndicator && !refreshing) {
       setIsLoadingPerguntas(true);
     }
     try {
-      // Verifique se o endpoint está correto (ex: /perguntas ou /)
       const response = await axios.get<Pergunta[]>(`${API_BASE_URL}/perguntas`);
-      // Ordenar por data de criação (mais recentes primeiro), se o campo existir
-      // Assumindo que 'createdAt' é um campo no seu modelo Pergunta
+
       const sortedPerguntas = response.data.sort((a, b) => {
-        // @ts-ignore - Se createdAt não estiver explicitamente na interface Pergunta mas vier da API
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        // @ts-ignore
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return dateB - dateA;
       });
@@ -49,7 +35,7 @@ export default function ForumScreen() {
       console.error("Erro ao buscar perguntas:", error);
       alert('Erro, Não foi possível carregar as perguntas.');
     } finally {
-      if (showLoadingIndicator || refreshing) { // Apenas atualiza loading se foi ativado
+      if (showLoadingIndicator || refreshing) {
         setIsLoadingPerguntas(false);
       }
       setRefreshing(false);
@@ -57,12 +43,12 @@ export default function ForumScreen() {
   };
 
   useEffect(() => {
-    fetchPerguntas(true); // Carga inicial com indicador de loading
+    fetchPerguntas(true);
   }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchPerguntas(false); // `refreshing` já indica o carregamento
+    fetchPerguntas(false);
   }, []);
 
   const handleAskQuestion = async () => {
@@ -94,17 +80,16 @@ export default function ForumScreen() {
 
       const questionPayload = {
         titulo: newQuestionText,
-        descricao: "", // Ajuste se tiver um campo de descrição separado para a pergunta
+        descricao: "",
         usuarioId: usuarioId,
       };
 
-      // Verifique se o endpoint está correto (ex: /perguntas ou /)
       const response = await axios.post(`${API_BASE_URL}/perguntas`, questionPayload);
 
       if (response.status === 201) {
         alert('Sucesso! Sua pergunta foi enviada.');
         setNewQuestionText('');
-        await fetchPerguntas(false); // Recarregar perguntas sem o loading principal, pois a lista será atualizada
+        await fetchPerguntas(false);
       } else {
         alert('Erro, Não foi possível enviar sua pergunta. Status: ${response.status}');
       }
@@ -120,10 +105,7 @@ export default function ForumScreen() {
     }
   };
 
-  // Callback para quando uma resposta é postada com sucesso no QuestionBlock
   const handleReplyPostedSuccess = () => {
-    // Recarrega as perguntas para incluir a nova resposta.
-    // `false` para não mostrar o loading principal, a atualização deve ser sutil.
     fetchPerguntas(false);
   };
 
@@ -133,7 +115,7 @@ export default function ForumScreen() {
 
       <ScrollView
         contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled" // Para fechar teclado ao tocar fora dos inputs na scrollview
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#F49F0A", "#508CA4"]} />
         }
@@ -163,7 +145,6 @@ export default function ForumScreen() {
         </View>
 
         <Text style={styles.feedHeading}>Perguntas da Comunidade</Text>
-        {/* Perguntas da Instituição ou Outros alunos Perguntaram... */}
 
         {isLoadingPerguntas && !refreshing ? (
           <ActivityIndicator size="large" color="#508CA4" style={styles.listLoadingIndicator} />
@@ -175,7 +156,7 @@ export default function ForumScreen() {
               onReplyPosted={handleReplyPostedSuccess}
             />
           ))
-        ) : !isLoadingPerguntas && !refreshing && perguntas.length === 0 ? ( // Condição para mostrar "Nenhuma pergunta" apenas se não estiver carregando
+        ) : !isLoadingPerguntas && !refreshing && perguntas.length === 0 ? (
           <Text style={styles.noQuestionsText}>Nenhuma pergunta encontrada. Seja o primeiro a perguntar!</Text>
         ) : null}
       </ScrollView>
@@ -190,18 +171,17 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 40, // Espaço no final da lista
+    paddingBottom: 40,
   },
-  // Estilos para o campo de fazer nova pergunta
   topInputContainer: {
-    backgroundColor: "#E0F2FE", // Um azul bem claro, quase branco
+    backgroundColor: "#E0F2FE", 
     borderRadius: 12,
-    padding: 15, // Um pouco mais de padding
+    padding: 15,
     flexDirection: "row",
-    alignItems: "flex-start", // Para input multiline
+    alignItems: "flex-start",
     gap: 12,
     marginBottom: 25,
-    shadowColor: "#000", // Sombra sutil
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -211,27 +191,27 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   dotIconAsk: {
-    width: 12, // Menor
-    height: 12, // Menor
+    width: 12,
+    height: 12,
     backgroundColor: "#F49F0A",
     borderRadius: 9999,
-    marginTop: 10, // Ajuste para alinhar com o texto do input
+    marginTop: 10,
   },
   inputAsk: {
     flex: 1,
     color: "black",
-    fontSize: 15, // Um pouco maior
-    minHeight: 45, // Altura mínima
-    maxHeight: 120, // Altura máxima
-    paddingVertical: 5, // Ajuste fino
+    fontSize: 15,
+    minHeight: 45,
+    maxHeight: 120,
+    paddingVertical: 5,
     textAlignVertical: 'top',
   },
   buttonAsk: {
     backgroundColor: "#F49F0A",
-    paddingVertical: 10, // Mais confortável
-    paddingHorizontal: 18, // Mais confortável
-    borderRadius: 25, // Mais arredondado
-    alignSelf: 'flex-end', // Alinhar ao final
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 25,
+    alignSelf: 'flex-end',
   },
   buttonAskDisabled: {
     opacity: 0.7,
@@ -241,25 +221,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-  // Título do feed
   feedHeading: {
-    // marginTop: 16, // Já tem margem do topInputContainer
     marginBottom: 15,
-    fontSize: 22, // Maior
-    fontWeight: '700', // Mais forte
-    color: '#1E293B', // Azul escuro
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1E293B',
     textAlign: 'left',
   },
-  // Indicadores de estado da lista
   listLoadingIndicator: {
-    marginVertical: 40, // Mais espaço
+    marginVertical: 40,
   },
   noQuestionsText: {
     textAlign: 'center',
-    color: '#64748B', // Cinza azulado
+    color: '#64748B',
     fontSize: 16,
-    marginVertical: 40, // Mais espaço
+    marginVertical: 40,
     fontStyle: 'italic',
-    paddingHorizontal: 20, // Para não ficar colado nas bordas
+    paddingHorizontal: 20,
   },
 });

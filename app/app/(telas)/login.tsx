@@ -120,7 +120,7 @@ export default function LoginPage() {
         </TouchableOpacity>
 
         <Text style={styles.loginText}>
-          Não tem uma conta? <Link href="/telas/cadastro" style={styles.loginButton}>Cadastre-se</Link>
+          Não tem uma conta? <Link href="/cadastro" style={styles.loginButton}>Cadastre-se</Link>
         </Text>
       </View>
     </SafeAreaView>
